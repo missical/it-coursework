@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Cancel Order{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'order_list' %}">My Orders</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'order_detail' order.id %}">Order Details</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Cancel Order</li>
+                </ol>
+            </nav>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0">Cancel Order</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> You are about to cancel this order. This action cannot be undone.
+                    </div>
+
+                    <h5 class="mb-3">Order Information</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            {% if order.product.images.exists %}
+                                {% with first_image=order.product.images.first %}
+                                    <img src="{{ first_image.image.url }}" alt="{{ order.product.title }}" class="img-fluid rounded">
+                                {% endwith %}
+                            {% else %}
+                                <div class="bg-light p-4 rounded text-center">
+                                    <i class="fas fa-image fa-3x text-muted"></i>
+                                    <p class="text-muted mt-2">No image</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-9">
+                            <h5>{{ order.product.title }}</h5>
+                            <p class="text-muted">{{ order.product.description|truncatewords:20 }}</p>
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <span class="badge bg-secondary">{{ order.product.category.name }}</span>
+                                    <span class="badge bg-info">{{ order.product.get_condition_display }}</span>
+                                </div>
+                                <p class="text-primary fw-bold">${{ order.product.price }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <p class="mb-1 text-muted">Order ID</p>
+                            <p class="fw-bold">{{ order.id|truncatechars:12 }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1 text-muted">Order Date</p>
+                            <p class="fw-bold">{{ order.created_at|date:"M d, Y" }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1 text-muted">Current Status</p>
+                            <p class="fw-bold">{{ order.get_status_display }}</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h5 class="mb-3">Cancellation Effects</h5>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            The product will be marked as available again
+                        </li>
+                        {% if order.payment %}
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Your payment will be marked for refund
+                        </li>
+                        {% endif %}
+                        <li class="list-group-item">
+                            <i class="fas fa-times-circle text-danger me-2"></i>
+                            The order will be permanently marked as cancelled
+                        </li>
+                    </ul>
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'order_detail' order.id %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Back to Order
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-times-circle me-1"></i> Confirm Cancellation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

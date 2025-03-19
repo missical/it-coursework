@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Order{% endblock %}
+
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">Complete Your Order</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <img src="{{ product.image.url }}" alt="{{ product.title }}" class="img-fluid rounded">
+                        </div>
+                        <div class="col-md-8">
+                            <h3>{{ product.title }}</h3>
+                            <p class="text-muted">{{ product.description|truncatewords:30 }}</p>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <span class="badge bg-secondary">{{ product.category.name }}</span>
+                                    <span class="badge bg-info">{{ product.get_condition_display }}</span>
+                                </div>
+                            </div>
+                            
+                            <h4 class="text-primary mb-3">${{ product.price }}</h4>
+                            
+                            <div class="mb-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i> Seller: 
+                                    <a href="{% url 'user_detail' product.seller.username %}">{{ product.seller.username }}</a>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h4 class="mb-3">Order Summary</h4>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Item price:</span>
+                        <span>${{ product.price }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 fw-bold">
+                        <span>Total:</span>
+                        <span>${{ product.price }}</span>
+                    </div>
+                    
+                    <hr>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {{ form|crispy }}
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Back to Product
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check me-1"></i> Confirm Order
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

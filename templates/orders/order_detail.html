@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'order_list' %}">My Orders</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Order Details</li>
+                </ol>
+            </nav>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">Order Details</h3>
+                    <span class="badge bg-{% if order.status == 'pending' %}warning{% elif order.status == 'processing' %}info{% elif order.status == 'shipped' %}primary{% elif order.status == 'delivered' or order.status == 'completed' %}success{% elif order.status == 'cancelled' %}danger{% else %}secondary{% endif %} fs-6">
+                        {{ order.get_status_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <p class="mb-1 text-muted">Order ID</p>
+                            <p class="fw-bold">{{ order.id|truncatechars:12 }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1 text-muted">Order Date</p>
+                            <p class="fw-bold">{{ order.created_at|date:"M d, Y" }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1 text-muted">Last Updated</p>
+                            <p class="fw-bold">{{ order.updated_at|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h5 class="mb-3">Product Information</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            {% if order.product.images.exists %}
+                                {% with first_image=order.product.images.first %}
+                                    <img src="{{ first_image.image.url }}" alt="{{ order.product.title }}" class="img-fluid rounded">
+                                {% endwith %}
+                            {% else %}
+                                <div class="bg-light p-4 rounded text-center">
+                                    <i class="fas fa-image fa-3x text-muted"></i>
+                                    <p class="text-muted mt-2">No image</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-9">
+                            <h5><a href="{% url 'product_detail' order.product.id %}">{{ order.product.title }}</a></h5>
+                            <p class="text-muted">{{ order.product.description|truncatewords:30 }}</p>
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <span class="badge bg-secondary">{{ order.product.category.name }}</span>
+                                    <span class="badge bg-info">{{ order.product.get_condition_display }}</span>
+                                </div>
+                                <p class="text-primary fw-bold">${{ order.product.price }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Shipping Information</h5>
+                            <p class="mb-1"><strong>Shipping Address:</strong></p>
+                            <p class="text-muted">{{ order.shipping_address|linebreaks }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Payment Information</h5>
+                            {% if order.payment %}
+                                <p><strong>Status:</strong> 
+                                    <span class="badge bg-{% if order.payment.status == 'completed' %}success{% elif order.payment.status == 'pending' %}warning{% elif order.payment.status == 'failed' %}danger{% else %}info{% endif %}">
+                                        {{ order.payment.get_status_display }}
+                                    </span>
+                                </p>
+                                <p><strong>Method:</strong> {{ order.payment.get_payment_method_display }}</p>
+                                <p><strong>Transaction ID:</strong> {{ order.payment.transaction_id }}</p>
+                                <p><strong>Date:</strong> {{ order.payment.created_at|date:"M d, Y" }}</p>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i> Payment pending
+                                </div>
+                                <a href="{% url 'payment' order_id=order.id %}" class="btn btn-success">
+                                    <i class="fas fa-credit-card me-1"></i> Complete Payment
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5>Order Summary</h5>
+                        <h5 class="text-primary">${{ order.total_price }}</h5>
+                    </div>
+
+                    {% if request.user == order.product.seller and order.status != 'cancelled' and order.status != 'completed' %}
+                    <hr>
+                    <div class="mt-3">
+                        <h5 class="mb-3">Update Order Status</h5>
+                        <form action="{% url 'update_order_status' order.id %}" method="post" class="d-flex gap-2">
+                            {% csrf_token %}
+                            <select name="status" class="form-select">
+                                <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>Processing</option>
+                                <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>Shipped</option>
+                                <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                                <option value="completed" {% if order.status == 'completed' %}selected{% endif %}>Completed</option>
+                                <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary">Update Status</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'order_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Orders
+                </a>
+                {% if request.user == order.buyer and order.status == 'delivered' %}
+                <form action="{% url 'update_order_status' order.id %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="status" value="completed">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check-circle me-1"></i> Mark as Completed
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

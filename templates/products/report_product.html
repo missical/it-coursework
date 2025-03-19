@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Report Product{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h2 class="mb-0">Report Product</h2>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h4>Reporting: {{ product.title }}</h4>
+                            <p class="text-muted">Please provide details about why you're reporting this product.</p>
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Submitting false reports may result in account restrictions.
+                            </div>
+                            <hr>
+                        </div>
+                    </div>
+                    
+                    <form method="POST" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.reason.id_for_label }}" class="form-label fw-bold">Reason for Reporting</label>
+                            {{ form.reason|as_crispy_field }}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">Additional Details</label>
+                            <p class="form-text text-muted mb-2">Please provide as much information as possible about the issue.</p>
+                            {{ form.description|as_crispy_field }}
+                        </div>
+                        
+                        <div class="d-flex mt-4">
+                            <button type="submit" class="btn btn-danger me-2">
+                                <i class="fas fa-flag me-2"></i>Submit Report
+                            </button>
+                            <a href="{% url 'product_detail' pk=product.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-control:focus, .form-select:focus {
+        border-color: var(--ebay-blue);
+        box-shadow: 0 0 0 0.25rem rgba(0, 99, 209, 0.25);
+    }
+    
+    .btn-danger {
+        background-color: var(--ebay-red);
+        border-color: var(--ebay-red);
+    }
+    
+    .btn-danger:hover {
+        background-color: #c02d32;
+        border-color: #c02d32;
+    }
+</style>
+{% endblock %} 

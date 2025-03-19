@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Second-Hand Marketplace - Home{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Hero Banner -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 rounded-3 overflow-hidden">
+                <div class="card-body p-0 position-relative">
+                    <img src="https://via.placeholder.com/1200x300" alt="Marketplace Banner" class="img-fluid w-100">
+                    <div class="position-absolute top-50 start-0 translate-middle-y p-5 text-white" style="background-color: rgba(0,0,0,0.5); max-width: 500px;">
+                        <h1 class="display-5 fw-bold">Buy and Sell Second-Hand Items</h1>
+                        <p class="lead">Find great deals on used items or sell things you no longer need.</p>
+                        <div class="mt-4">
+                            <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg me-2">Browse Products</a>
+                            {% if user.is_authenticated %}
+                            <a href="{% url 'create_product' %}" class="btn btn-outline-light btn-lg">Sell an Item</a>
+                            {% else %}
+                            <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg">Sign Up</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Deals Section -->
+    <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="mb-0">Daily Deals</h2>
+            <a href="{% url 'product_list' %}" class="text-decoration-none">See all <i class="fas fa-chevron-right ms-1"></i></a>
+        </div>
+        <div class="row">
+            {% for product in featured_products|slice:":4" %}
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 product-card">
+                    <div class="position-relative">
+                        {% if product.images.exists %}
+                            {% with product.images.first as image %}
+                            <img src="{{ image.image.url }}" class="card-img-top" alt="{{ product.title }}">
+                            {% endwith %}
+                        {% else %}
+                            <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="{{ product.title }}">
+                        {% endif %}
+                        <span class="badge bg-danger position-absolute top-0 end-0 m-2">DEAL</span>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title text-truncate">{{ product.title }}</h5>
+                        <p class="card-text text-muted small">{{ product.description|truncatechars:60 }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h5 text-danger mb-0">${{ product.price }}</span>
+                            <span class="text-muted small">{{ product.created_at|date:"M d" }}</span>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top-0">
+                        <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-primary btn-sm w-100">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">No featured products available yet.</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Categories Section -->
+    <div class="mb-5">
+        <h2 class="mb-4">Shop by Category</h2>
+        <div class="row">
+            {% for category in categories %}
+            <div class="col-md-2 col-sm-4 col-6 mb-4 text-center">
+                <a href="{% url 'category_products' category.slug %}" class="text-decoration-none">
+                    <div class="card h-100 border-0 category-card">
+                        <div class="card-body">
+                            <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background-color: #f8f9fa;">
+                                <i class="fas fa-{% if category.name == 'Electronics' %}laptop{% elif category.name == 'Clothing' %}tshirt{% elif category.name == 'Furniture' %}couch{% elif category.name == 'Books' %}book{% elif category.name == 'Sports' %}futbol{% elif category.name == 'Toys' %}gamepad{% elif category.name == 'Home & Garden' %}home{% elif category.name == 'Vehicles' %}car{% elif category.name == 'Collectibles' %}gem{% else %}box{% endif %} fa-2x text-muted"></i>
+                            </div>
+                            <h6 class="card-title">{{ category.name }}</h6>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">No categories available yet.</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Popular Items Section -->
+    <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="mb-0">Popular Items</h2>
+            <a href="{% url 'product_list' %}" class="text-decoration-none">See all <i class="fas fa-chevron-right ms-1"></i></a>
+        </div>
+        <div class="row">
+            {% for product in featured_products|slice:"4:8" %}
+            <div class="col-md-3 mb-4">
+                <div class="card h-100 product-card">
+                    {% if product.images.exists %}
+                        {% with product.images.first as image %}
+                        <img src="{{ image.image.url }}" class="card-img-top" alt="{{ product.title }}">
+                        {% endwith %}
+                    {% else %}
+                        <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="{{ product.title }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title text-truncate">{{ product.title }}</h5>
+                        <p class="card-text text-muted small">{{ product.description|truncatechars:60 }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h5 text-success mb-0">${{ product.price }}</span>
+                            <span class="text-muted small">{{ product.created_at|date:"M d" }}</span>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top-0">
+                        <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-primary btn-sm w-100">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">No popular products available yet.</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <div class="row mt-5 mb-5 py-4 bg-light rounded">
+        <div class="col-12 text-center mb-4">
+            <h2>How It Works</h2>
+            <p class="text-muted">Simple steps to buy and sell on our marketplace</p>
+        </div>
+        <div class="col-md-4 text-center mb-3">
+            <div class="p-4">
+                <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background-color: var(--ebay-blue); color: white;">
+                    <i class="fas fa-search fa-2x"></i>
+                </div>
+                <h4>Find What You Need</h4>
+                <p class="text-muted">Browse through thousands of second-hand items in various categories.</p>
+            </div>
+        </div>
+        <div class="col-md-4 text-center mb-3">
+            <div class="p-4">
+                <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background-color: var(--ebay-yellow); color: white;">
+                    <i class="fas fa-comments fa-2x"></i>
+                </div>
+                <h4>Contact the Seller</h4>
+                <p class="text-muted">Message sellers directly to ask questions or negotiate prices.</p>
+            </div>
+        </div>
+        <div class="col-md-4 text-center mb-3">
+            <div class="p-4">
+                <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background-color: var(--ebay-green); color: white;">
+                    <i class="fas fa-handshake fa-2x"></i>
+                </div>
+                <h4>Complete the Transaction</h4>
+                <p class="text-muted">Pay securely through our platform and receive your items.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+        border: 1px solid rgba(0,0,0,0.1);
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .category-card:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %} 

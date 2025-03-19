@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load messaging_extras %}
+
+{% block title %}Message Inbox{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">Messages</h2>
+                </div>
+                <div class="card-body p-0">
+                    {% if conversations %}
+                        <div class="list-group list-group-flush">
+                            {% for conversation in conversations %}
+                                <a href="{% url 'conversation_detail' conversation.id %}" class="list-group-item list-group-item-action py-3 border-bottom">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-1 text-center">
+                                            {% if unread_counts|get_item:conversation.id > 0 %}
+                                                <span class="badge bg-primary rounded-pill">{{ unread_counts|get_item:conversation.id }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-2">
+                                            {% with other_user=conversation.participants.exclude.first %}
+                                                <div class="d-flex flex-column">
+                                                    <span class="fw-bold">{{ other_user.username }}</span>
+                                                    <small class="text-muted">{{ conversation.updated_at|date:"M d, Y" }}</small>
+                                                </div>
+                                            {% endwith %}
+                                        </div>
+                                        <div class="col-md-7">
+                                            {% if conversation.product %}
+                                                <div class="d-flex align-items-center">
+                                                    <span class="badge bg-light text-dark me-2">About:</span>
+                                                    <span>{{ conversation.product.title }}</span>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">General conversation</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-2 text-end">
+                                            <i class="fas fa-chevron-right text-muted"></i>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center p-5">
+                            <i class="fas fa-envelope fa-4x text-muted mb-3"></i>
+                            <h4>No Messages</h4>
+                            <p class="text-muted">You don't have any messages yet.</p>
+                            <p>Start a conversation by browsing products and clicking 'Contact Seller'.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .list-group-item-action:hover {
+        background-color: rgba(0, 99, 209, 0.05);
+    }
+    
+    .badge.bg-primary {
+        background-color: var(--ebay-blue) !important;
+    }
+</style>
+{% endblock %} 

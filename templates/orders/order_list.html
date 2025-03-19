@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}My Orders{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">My Orders</h1>
+    
+    <ul class="nav nav-tabs mb-4" id="orderTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="purchases-tab" data-bs-toggle="tab" data-bs-target="#purchases" type="button" role="tab" aria-controls="purchases" aria-selected="true">
+                My Purchases
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button" role="tab" aria-controls="sales" aria-selected="false">
+                My Sales
+            </button>
+        </li>
+    </ul>
+    
+    <div class="tab-content" id="orderTabsContent">
+        <!-- Purchases Tab -->
+        <div class="tab-pane fade show active" id="purchases" role="tabpanel" aria-labelledby="purchases-tab">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in buyer_orders %}
+                        <tr>
+                            <td>{{ order.id|truncatechars:8 }}</td>
+                            <td>
+                                <a href="{% url 'product_detail' order.product.id %}">{{ order.product.title }}</a>
+                            </td>
+                            <td>${{ order.total_price }}</td>
+                            <td>{{ order.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge bg-{% if order.status == 'pending' %}warning{% elif order.status == 'completed' %}success{% elif order.status == 'cancelled' %}danger{% else %}info{% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-outline-primary">Details</a>
+                                {% if order.status == 'pending' %}
+                                <a href="{% url 'payment' order.id %}" class="btn btn-sm btn-outline-success">Pay</a>
+                                {% endif %}
+                                {% if order.status != 'cancelled' and order.status != 'completed' %}
+                                <a href="{% url 'cancel_order' order.id %}" class="btn btn-sm btn-outline-danger">Cancel</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">You haven't made any purchases yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Sales Tab -->
+        <div class="tab-pane fade" id="sales" role="tabpanel" aria-labelledby="sales-tab">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Product</th>
+                            <th>Buyer</th>
+                            <th>Price</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in seller_orders %}
+                        <tr>
+                            <td>{{ order.id|truncatechars:8 }}</td>
+                            <td>
+                                <a href="{% url 'product_detail' order.product.id %}">{{ order.product.title }}</a>
+                            </td>
+                            <td>
+                                <a href="{% url 'user_detail' order.buyer.username %}">{{ order.buyer.username }}</a>
+                            </td>
+                            <td>${{ order.total_price }}</td>
+                            <td>{{ order.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge bg-{% if order.status == 'pending' %}warning{% elif order.status == 'completed' %}success{% elif order.status == 'cancelled' %}danger{% else %}info{% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-outline-primary">Details</a>
+                                <a href="{% url 'start_conversation_with_user' order.buyer.id %}" class="btn btn-sm btn-outline-info">Message</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">You haven't sold any products yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

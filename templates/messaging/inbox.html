@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load messaging_extras %}
+
+{% block title %}Messages{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Conversations</h5>
+                    <a href="{% url 'start_conversation' %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus"></i> New
+                    </a>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for conversation in conversations %}
+                    <a href="{% url 'conversation_detail' conversation.id %}" class="list-group-item list-group-item-action {% if conversation.id == active_conversation.id %}active{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                {% for participant in conversation.participants.all %}
+                                    {% if participant != user %}
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ participant.profile.image.url }}" alt="{{ participant.username }}" class="rounded-circle me-2" style="width: 30px; height: 30px;">
+                                        <span>{{ participant.username }}</span>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if conversation.product %}
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-tag me-1"></i> {{ conversation.product.title|truncatechars:20 }}
+                                </small>
+                                {% endif %}
+                            </div>
+                            {% if unread_counts|get_item:conversation.id > 0 %}
+                            <span class="badge bg-danger rounded-pill">{{ unread_counts|get_item:conversation.id }}</span>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">{{ conversation.updated_at|date:"M d, Y" }}</small>
+                    </a>
+                    {% empty %}
+                    <div class="list-group-item text-center py-3">
+                        <p class="mb-0">No conversations yet</p>
+                        <small class="text-muted">Start a conversation with a seller</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Messages</h5>
+                </div>
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-comments fa-4x text-muted mb-3"></i>
+                    <h4>Select a conversation</h4>
+                    <p class="text-muted">Choose a conversation from the list or start a new one</p>
+                    <a href="{% url 'start_conversation' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> New Conversation
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

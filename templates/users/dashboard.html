@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Dashboard</h1>
+    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <img src="{{ user.profile.image.url }}" alt="{{ user.username }}" class="rounded-circle img-fluid mb-3" style="max-width: 150px;">
+                    <h5 class="card-title">{{ user.username }}</h5>
+                    <p class="card-text text-muted">{{ user.email }}</p>
+                    <div class="d-grid">
+                        <a href="{% url 'profile' %}" class="btn btn-outline-primary">Edit Profile</a>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <div class="d-flex justify-content-around">
+                        <div>
+                            <h6>{{ products.count }}</h6>
+                            <small class="text-muted">Products</small>
+                        </div>
+                        <div>
+                            <h6>{{ favorites.count }}</h6>
+                            <small class="text-muted">Favorites</small>
+                        </div>
+                        <div>
+                            <h6>{{ avg_rating|floatformat:1 }}</h6>
+                            <small class="text-muted">Rating</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="list-group mb-4">
+                <a href="#my-products" class="list-group-item list-group-item-action active" data-bs-toggle="list">My Products</a>
+                <a href="#favorites" class="list-group-item list-group-item-action" data-bs-toggle="list">Favorites</a>
+                <a href="#ratings" class="list-group-item list-group-item-action" data-bs-toggle="list">Ratings & Reviews</a>
+                <a href="{% url 'order_list' %}" class="list-group-item list-group-item-action">My Orders</a>
+                <a href="{% url 'inbox' %}" class="list-group-item list-group-item-action">Messages</a>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="tab-content">
+                <!-- My Products Tab -->
+                <div class="tab-pane fade show active" id="my-products">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3>My Products</h3>
+                        <a href="{% url 'create_product' %}" class="btn btn-primary">
+                            <i class="fas fa-plus-circle me-1"></i> Add New Product
+                        </a>
+                    </div>
+                    
+                    <div class="row">
+                        {% for product in products %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                {% if product.images.exists %}
+                                    {% with product.images.first as image %}
+                                    <img src="{{ image.image.url }}" class="card-img-top" alt="{{ product.title }}">
+                                    {% endwith %}
+                                {% else %}
+                                    <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="{{ product.title }}">
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ product.title }}</h5>
+                                    <p class="card-text text-muted">{{ product.description|truncatechars:100 }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="h5 text-success">${{ product.price }}</span>
+                                        <span class="badge bg-{% if product.status == 'available' %}success{% elif product.status == 'reserved' %}warning{% else %}secondary{% endif %}">
+                                            {{ product.get_status_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="d-flex justify-content-between">
+                                        <a href="{% url 'product_detail' product.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                        <a href="{% url 'edit_product' product.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                        <a href="{% url 'delete_product' product.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                You haven't listed any products yet. <a href="{% url 'create_product' %}">Create your first listing</a>!
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Favorites Tab -->
+                <div class="tab-pane fade" id="favorites">
+                    <h3 class="mb-3">Favorite Products</h3>
+                    
+                    <div class="row">
+                        {% for favorite in favorites %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                {% if favorite.product.images.exists %}
+                                    {% with favorite.product.images.first as image %}
+                                    <img src="{{ image.image.url }}" class="card-img-top" alt="{{ favorite.product.title }}">
+                                    {% endwith %}
+                                {% else %}
+                                    <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="{{ favorite.product.title }}">
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ favorite.product.title }}</h5>
+                                    <p class="card-text text-muted">{{ favorite.product.description|truncatechars:100 }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="h5 text-success">${{ favorite.product.price }}</span>
+                                        <span class="badge bg-{% if favorite.product.status == 'available' %}success{% elif favorite.product.status == 'reserved' %}warning{% else %}secondary{% endif %}">
+                                            {{ favorite.product.get_status_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="d-flex justify-content-between">
+                                        <a href="{% url 'product_detail' favorite.product.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                        <button class="btn btn-sm btn-outline-danger favorite-btn" data-product-id="{{ favorite.product.id }}">
+                                            <i class="fas fa-heart me-1"></i> Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                You don't have any favorite products yet. Browse products and click the heart icon to add them to your favorites!
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Ratings Tab -->
+                <div class="tab-pane fade" id="ratings">
+                    <h3 class="mb-3">Ratings & Reviews</h3>
+                    
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="me-3">
+                                    <span class="display-4">{{ avg_rating|floatformat:1 }}</span>
+                                    <div>
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= avg_rating|floatformat:0|add:"0" %}
+                                                <i class="fas fa-star text-warning"></i>
+                                            {% elif forloop.counter <= avg_rating|floatformat:0|add:"0.5"|add:"0.5" %}
+                                                <i class="fas fa-star-half-alt text-warning"></i>
+                                            {% else %}
+                                                <i class="far fa-star text-warning"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="mb-0">Based on {{ ratings.count }} ratings</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="list-group">
+                        {% for rating in ratings %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ rating.rater.profile.image.url }}" alt="{{ rating.rater.username }}" class="rounded-circle me-2" style="width: 40px; height: 40px;">
+                                    <div>
+                                        <h6 class="mb-0">{{ rating.rater.username }}</h6>
+                                        <small class="text-muted">{{ rating.created_at|date:"F j, Y" }}</small>
+                                    </div>
+                                </div>
+                                <div>
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= rating.rating %}
+                                            <i class="fas fa-star text-warning"></i>
+                                        {% else %}
+                                            <i class="far fa-star text-warning"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% if rating.comment %}
+                            <p class="mb-0">{{ rating.comment }}</p>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <div class="alert alert-info">
+                            You don't have any ratings yet. Ratings will appear here after you complete transactions with buyers.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle favorite button clicks
+        const favoriteBtns = document.querySelectorAll('.favorite-btn');
+        favoriteBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const productId = this.getAttribute('data-product-id');
+                fetch(`/products/${productId}/favorite/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Reload the page to reflect changes
+                    window.location.reload();
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    });
+</script>
+{% endblock %} 

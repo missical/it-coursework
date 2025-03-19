@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Edit Product{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">Edit Product</h2>
+                    <a href="{% url 'product_detail' pk=product.pk %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Product
+                    </a>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h4 class="mb-3">Product Details</h4>
+                                <hr>
+                            </div>
+                            
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">Title</label>
+                                {{ form.title|as_crispy_field }}
+                            </div>
+                            
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">Description</label>
+                                {{ form.description|as_crispy_field }}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.category.id_for_label }}" class="form-label fw-bold">Category</label>
+                                {{ form.category|as_crispy_field }}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.condition.id_for_label }}" class="form-label fw-bold">Condition</label>
+                                {{ form.condition|as_crispy_field }}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.price.id_for_label }}" class="form-label fw-bold">Price</label>
+                                {{ form.price|as_crispy_field }}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.location.id_for_label }}" class="form-label fw-bold">Location</label>
+                                {{ form.location|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h4 class="mb-3">Product Images</h4>
+                                <p class="text-muted">You can update existing images or add new ones (up to 5 total).</p>
+                                <hr>
+                            </div>
+                            
+                            {{ formset.management_form }}
+                            
+                            <div class="row" id="image-formset">
+                                {% for form in formset %}
+                                <div class="col-md-6 mb-3 formset-row">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            {{ form.id }}
+                                            <div class="mb-3">
+                                                <label for="{{ form.image.id_for_label }}" class="form-label fw-bold">Image {{ forloop.counter }}</label>
+                                                {% if form.instance.image %}
+                                                    <div class="mb-2">
+                                                        <img src="{{ form.instance.image.url }}" alt="Product image" class="img-thumbnail mb-2" style="max-height: 100px;">
+                                                    </div>
+                                                {% endif %}
+                                                {{ form.image|as_crispy_field }}
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                {{ form.is_primary.tag }}
+                                                <label class="form-check-label" for="{{ form.is_primary.id_for_label }}">
+                                                    Set as primary image
+                                                </label>
+                                            </div>
+                                            {% if formset.can_delete %}
+                                                <div class="form-check mb-2">
+                                                    {{ form.DELETE.tag }}
+                                                    <label class="form-check-label" for="{{ form.DELETE.id_for_label }}">
+                                                        Delete this image
+                                                    </label>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">Save Changes</button>
+                            <a href="{% url 'product_detail' pk=product.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Ensure only one image is marked as primary
+    document.addEventListener('DOMContentLoaded', function() {
+        const primaryCheckboxes = document.querySelectorAll('input[name$="-is_primary"]');
+        
+        primaryCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if(this.checked) {
+                    primaryCheckboxes.forEach(cb => {
+                        if(cb !== this) {
+                            cb.checked = false;
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-control:focus, .form-select:focus {
+        border-color: var(--ebay-blue);
+        box-shadow: 0 0 0 0.25rem rgba(0, 99, 209, 0.25);
+    }
+    
+    .btn-primary {
+        padding: 10px 16px;
+        font-weight: 500;
+    }
+    
+    .formset-row {
+        transition: all 0.3s ease;
+    }
+    
+    /* Preview for uploaded images */
+    .img-preview {
+        max-height: 150px;
+        max-width: 100%;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %} 

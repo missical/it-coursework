@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Products</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'category_products' product.category.slug %}">{{ product.category.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ product.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-md-6 mb-4">
+            <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    {% if product.images.exists %}
+                        {% for image in product.images.all %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            <img src="{{ image.image.url }}" class="d-block w-100 product-detail-img" alt="{{ product.title }}">
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="carousel-item active">
+                            <img src="https://via.placeholder.com/600x400" class="d-block w-100 product-detail-img" alt="{{ product.title }}">
+                        </div>
+                    {% endif %}
+                </div>
+                {% if product.images.count > 1 %}
+                <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Product Details -->
+        <div class="col-md-6">
+            <h1 class="mb-3">{{ product.title }}</h1>
+            <div class="d-flex align-items-center mb-3">
+                <span class="h2 text-success me-3">${{ product.price }}</span>
+                <span class="badge bg-{% if product.status == 'available' %}success{% elif product.status == 'reserved' %}warning{% else %}secondary{% endif %}">
+                    {{ product.get_status_display }}
+                </span>
+            </div>
+
+            <div class="mb-4">
+                <h5>Description</h5>
+                <p>{{ product.description }}</p>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Details</h5>
+                    <ul class="list-unstyled">
+                        <li><strong>Condition:</strong> {{ product.condition }}</li>
+                        <li><strong>Category:</strong> {{ product.category.name }}</li>
+                        <li><strong>Location:</strong> {{ product.location }}</li>
+                        <li><strong>Listed:</strong> {{ product.created_at|date:"F j, Y" }}</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Seller</h5>
+                    <div class="d-flex align-items-center mb-2">
+                        <img src="{{ product.seller.profile.image.url }}" alt="{{ product.seller.username }}" class="rounded-circle me-2" style="width: 40px; height: 40px;">
+                        <a href="{% url 'user_detail' product.seller.username %}">{{ product.seller.username }}</a>
+                    </div>
+                    <a href="{% url 'start_conversation_about_product' product.id %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-comment me-1"></i> Contact Seller
+                    </a>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                {% if product.status == 'available' and user.is_authenticated and user != product.seller %}
+                <a href="{% url 'create_order' product.id %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-shopping-cart me-1"></i> Buy Now
+                </a>
+                {% elif product.status != 'available' %}
+                <button class="btn btn-secondary btn-lg" disabled>
+                    {{ product.get_status_display }}
+                </button>
+                {% elif not user.is_authenticated %}
+                <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary btn-lg">
+                    Login to Buy
+                </a>
+                {% endif %}
+
+                {% if user.is_authenticated and user != product.seller %}
+                <button id="favoriteBtn" class="btn btn-outline-danger">
+                    <i class="{% if is_favorited %}fas{% else %}far{% endif %} fa-heart me-1"></i>
+                    <span id="favoriteText">{% if is_favorited %}Remove from Favorites{% else %}Add to Favorites{% endif %}</span>
+                </button>
+                {% endif %}
+
+                {% if user == product.seller %}
+                <div class="d-flex gap-2">
+                    <a href="{% url 'edit_product' product.id %}" class="btn btn-outline-primary flex-grow-1">
+                        <i class="fas fa-edit me-1"></i> Edit
+                    </a>
+                    <a href="{% url 'delete_product' product.id %}" class="btn btn-outline-danger flex-grow-1">
+                        <i class="fas fa-trash me-1"></i> Delete
+                    </a>
+                </div>
+                {% endif %}
+
+                {% if user.is_authenticated and user != product.seller %}
+                <a href="{% url 'report_product' product.id %}" class="btn btn-outline-warning btn-sm">
+                    <i class="fas fa-flag me-1"></i> Report this listing
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    <div class="mt-5">
+        <h3 class="mb-4">Similar Products</h3>
+        <div class="row">
+            {% for related_product in product.category.products.all|slice:":3" %}
+                {% if related_product != product and related_product.status == 'available' %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        {% if related_product.images.exists %}
+                            {% with related_product.images.first as image %}
+                            <img src="{{ image.image.url }}" class="card-img-top" alt="{{ related_product.title }}">
+                            {% endwith %}
+                        {% else %}
+                            <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="{{ related_product.title }}">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ related_product.title }}</h5>
+                            <p class="card-text text-muted">{{ related_product.description|truncatechars:100 }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="h5 text-success">${{ related_product.price }}</span>
+                                <a href="{% url 'product_detail' related_product.id %}" class="btn btn-sm btn-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if user.is_authenticated and user != product.seller %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const favoriteBtn = document.getElementById('favoriteBtn');
+        const favoriteText = document.getElementById('favoriteText');
+        
+        favoriteBtn.addEventListener('click', function() {
+            fetch('{% url "toggle_favorite" product.id %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const icon = favoriteBtn.querySelector('i');
+                if (data.is_favorited) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    favoriteText.textContent = 'Remove from Favorites';
+                } else {
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                    favoriteText.textContent = 'Add to Favorites';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // 刷新页面以获取最新状态
+                window.location.reload();
+            });
+        });
+    });
+</script>
+{% endif %}
+{% endblock %} 

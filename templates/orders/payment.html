@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment{% endblock %}
+
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">Complete Payment</h2>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h4>Order Summary</h4>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        {% if order.product.images.exists %}
+                                            {% with first_image=order.product.images.first %}
+                                                <img src="{{ first_image.image.url }}" alt="{{ order.product.title }}" class="img-fluid rounded">
+                                            {% endwith %}
+                                        {% else %}
+                                            <div class="bg-light p-4 rounded text-center">
+                                                <i class="fas fa-image fa-3x text-muted"></i>
+                                                <p class="text-muted mt-2">No image</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-9">
+                                        <h5>{{ order.product.title }}</h5>
+                                        <p class="text-muted">{{ order.product.description|truncatewords:20 }}</p>
+                                        <p><strong>Seller:</strong> {{ order.product.seller.username }}</p>
+                                        <p><strong>Quantity:</strong> {{ order.quantity }}</p>
+                                        <p><strong>Shipping to:</strong> {{ order.shipping_address }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Product price:</span>
+                            <span>${{ order.product.price }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 fw-bold">
+                            <span>Total amount:</span>
+                            <span>${{ order.total_price }}</span>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h4 class="mb-3">Payment Information</h4>
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            {{ form.payment_method|as_crispy_field }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.card_holder|as_crispy_field }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.card_number|as_crispy_field }}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                {{ form.expiry_month|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.expiry_year|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.cvv|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'order_detail' order_id=order.id %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Back to Order
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-credit-card me-1"></i> Complete Payment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="mt-3 text-center">
+                <small class="text-muted">
+                    <i class="fas fa-lock me-1"></i> All payment information is encrypted and secure.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
